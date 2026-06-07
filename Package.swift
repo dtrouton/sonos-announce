@@ -17,8 +17,11 @@ let package = Package(
             dependencies: ["SonosKit"],
             path: "Tests/SonosKitTests"
         ),
+        // Named distinctly from the iOS Xcode app target/scheme ("SonosAnnounce")
+        // so Xcode's implicit-dependency resolution never tries to build this
+        // macOS (AppKit) executable for the iOS destination.
         .executableTarget(
-            name: "SonosAnnounce",
+            name: "SonosAnnounceMac",
             dependencies: ["SonosKit"],
             path: "apps/macOS",
             exclude: ["Info.plist"]

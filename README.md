@@ -36,7 +36,7 @@ Runs the SonosKit unit tests (no speakers or simulator required).
 ## Running
 
 ```bash
-swift run SonosAnnounce
+swift run SonosAnnounceMac
 ```
 
 The app will open a window where you can:
