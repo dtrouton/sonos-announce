@@ -36,7 +36,7 @@ Runs the SonosKit unit tests (no speakers or simulator required).
 ## Running
 
 ```bash
-swift run SonosAnnounce
+swift run SonosAnnounceMac
 ```
 
 The app will open a window where you can:
@@ -45,6 +45,27 @@ The app will open a window where you can:
 - **Choose a message** — pick a quick phrase or type a custom one
 - **Set volume** — controls the announcement volume (10–100)
 - **Announce** — sends the message to all selected speakers
+
+## iOS app
+
+The iOS app lives in `apps/iOS/` and its Xcode project is generated with [XcodeGen](https://github.com/yonaskolb/XcodeGen) (the `.xcodeproj` is not committed).
+
+One-time setup and open in Xcode:
+
+```bash
+brew install xcodegen
+xcodegen generate --spec apps/iOS/project.yml --project apps/iOS
+open apps/iOS/SonosAnnounce.xcodeproj
+```
+
+Or build headlessly on a simulator:
+
+```bash
+xcodebuild -project apps/iOS/SonosAnnounce.xcodeproj -scheme SonosAnnounce \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+```
+
+To run on a device or ship to **TestFlight**: open the project in Xcode, set your signing **Team** on the `SonosAnnounce` target (Signing & Capabilities), then Product → Archive → distribute to App Store Connect. The app needs **Local Network** permission (declared in `apps/iOS/SonosAnnounce-Info.plist`) and your iPhone must be on the same Wi-Fi as the speakers.
 
 ## Architecture
 
