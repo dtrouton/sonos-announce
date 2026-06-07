@@ -5,7 +5,7 @@ A lightweight macOS app that sends text-to-speech announcements to Sonos speaker
 ## How It Works
 
 1. **Discovers** Sonos speakers on the LAN via Bonjour (`_sonos._tcp`)
-2. **Generates** a WAV audio file from your message using macOS `say` (or `AVSpeechSynthesizer` on iOS)
+2. **Generates** a WAV audio file from your message using `AVSpeechSynthesizer`
 3. **Serves** the audio over a temporary local HTTP server so speakers can fetch it
 4. **Snapshots** each speaker's current playback state (track, position, volume)
 5. **Plays** the announcement on all selected speakers via UPnP/SOAP
