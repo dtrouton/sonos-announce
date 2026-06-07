@@ -188,14 +188,7 @@ struct ContentView: View {
         status = "Announcing..."
         let result = await service.announce(message: fullMessage, to: players, volume: Int(volume))
 
-        if result.allSucceeded {
-            status = "Done!"
-        } else if result.succeeded.isEmpty {
-            status = "Failed: \(result.failed.first?.reason ?? "unknown error")"
-        } else {
-            let failedNames = result.failed.map(\.player.name).joined(separator: ", ")
-            status = "Announced to \(result.succeeded.count) of \(result.succeeded.count + result.failed.count) — \(failedNames) failed"
-        }
+        status = announceStatusMessage(result)
 
         try? await Task.sleep(nanoseconds: 3_000_000_000)
         status = ""
