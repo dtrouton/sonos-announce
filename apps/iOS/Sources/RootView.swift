@@ -100,6 +100,7 @@ struct RootView: View {
             selected = settings.selectedPlayerIDs
             volume = Double(settings.lastVolume)
             phrases = settings.quickPhrases
+            message = settings.lastMessage
             await refresh()
         }
         .onChange(of: selected) { _ in settings.selectedPlayerIDs = selected }

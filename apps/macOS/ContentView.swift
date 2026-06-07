@@ -161,6 +161,7 @@ struct ContentView: View {
         .task {
             selectedPlayers = settings.selectedPlayerIDs
             volume = Double(settings.lastVolume)
+            message = settings.lastMessage
             await discovery.discover()
         }
         .onChange(of: selectedPlayers) { settings.selectedPlayerIDs = $0 }
