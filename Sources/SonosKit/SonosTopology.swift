@@ -93,3 +93,13 @@ public struct SonosTopology {
         return parseZoneGroupState(inner)
     }
 }
+
+/// IDs of players that belong to a multi-member group (used to show a "grouped"
+/// badge in the UI). Players in a group of one are not considered grouped.
+public func groupedPlayerIDs(from groups: [SonosGroup]) -> Set<String> {
+    var ids: Set<String> = []
+    for group in groups where group.memberIDs.count > 1 {
+        ids.formUnion(group.memberIDs)
+    }
+    return ids
+}
