@@ -22,11 +22,30 @@ struct RootView: View {
                 .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 20) {
-                Text("📣 Announce")
-                    .font(.largeTitle.bold())
+                HStack {
+                    Text("📣 Announce").font(.largeTitle.bold())
+                    Spacer()
+                    Button { Task { await refresh() } } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .disabled(discovery.isSearching)
+                }
 
                 SpeakerPicker(players: discovery.players, groupedIDs: groupedIDs,
                               isSearching: discovery.isSearching, selected: $selected)
+
+                if !discovery.isSearching && discovery.players.isEmpty {
+                    HStack(spacing: 8) {
+                        Image(systemName: "wifi.exclamationmark")
+                        Text("No speakers found. If you denied Local Network access, enable it in Settings.")
+                            .font(.caption)
+                        Button("Open Settings", action: openSettings)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                    .padding(10)
+                    .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+                }
 
                 Button { showingSheet = true } label: {
                     HStack {
@@ -85,6 +104,12 @@ struct RootView: View {
         }
         .onChange(of: selected) { _ in settings.selectedPlayerIDs = selected }
         .onChange(of: volume) { _ in settings.lastVolume = Int(volume) }
+    }
+
+    private func openSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
     }
 
     private func refresh() async {
