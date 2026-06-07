@@ -17,11 +17,15 @@ let package = Package(
             dependencies: ["SonosKit"],
             path: "Tests/SonosKitTests"
         ),
-        .executableTarget(
-            name: "SonosAnnounce",
-            dependencies: ["SonosKit"],
-            path: "apps/macOS",
-            exclude: ["Info.plist"]
-        ),
+        // NOTE: The macOS app (apps/macOS) is temporarily NOT a build target during
+        // the SonosKit extraction (Tasks 2-12) so `swift test` stays green while the
+        // app references not-yet-public types. Task 13 restores this executable target
+        // and refactors the app onto SonosKit.
+        // .executableTarget(
+        //     name: "SonosAnnounce",
+        //     dependencies: ["SonosKit"],
+        //     path: "apps/macOS",
+        //     exclude: ["Info.plist"]
+        // ),
     ]
 )

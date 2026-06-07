@@ -109,15 +109,24 @@ let package = Package(
             dependencies: ["SonosKit"],
             path: "Tests/SonosKitTests"
         ),
-        .executableTarget(
-            name: "SonosAnnounce",
-            dependencies: ["SonosKit"],
-            path: "apps/macOS",
-            exclude: ["Info.plist"]
-        ),
+        // The macOS app (apps/macOS) is temporarily NOT a build target during the
+        // SonosKit extraction (Tasks 2-12) so `swift test` stays green while the app
+        // references not-yet-public types. Task 13 restores this executable target.
+        // .executableTarget(
+        //     name: "SonosAnnounce",
+        //     dependencies: ["SonosKit"],
+        //     path: "apps/macOS",
+        //     exclude: ["Info.plist"]
+        // ),
     ]
 )
 ```
+
+> **Plan correction (discovered during execution):** `swift test` builds *all*
+> declared targets, so leaving the broken macOS executable in the manifest would
+> block test runs throughout Tasks 2–12. The executable target is therefore
+> commented out here and restored in Task 13. SwiftPM ignores `apps/macOS`
+> entirely while it is not part of any target.
 
 - [ ] **Step 3: Add a placeholder test so the test target compiles**
 
@@ -136,12 +145,12 @@ final class PackageSmokeTests: XCTestCase {
 
 - [ ] **Step 4: Make the macOS app import SonosKit**
 
-At the top of `apps/macOS/ContentView.swift`, add `import SonosKit` after `import SwiftUI`. (Types will not yet be public — that is fixed in Tasks 2–9. This step only adds the import.)
+At the top of `apps/macOS/ContentView.swift`, add `import SonosKit` after `import SwiftUI`. (The macOS app is not a build target until Task 13, so this file is not compiled yet; the import is added now so Task 13 has less to change.)
 
-- [ ] **Step 5: Build (expect failures about access control)**
+- [ ] **Step 5: Build and test (both green)**
 
-Run: `swift build 2>&1 | tail -20`
-Expected: Compiles `SonosKit` target, then FAILS in `apps/macOS` with errors like "'SonosPlayer' is inaccessible due to 'internal' protection level". This confirms the restructure is correct; access control is fixed in later tasks.
+Run: `swift build 2>&1 | tail -10` then `swift test 2>&1 | tail -10`
+Expected: Both succeed. Only `SonosKit` + `SonosKitTests` are built (the macOS executable target is commented out), and the placeholder test passes.
 
 - [ ] **Step 6: Commit**
 
@@ -1426,8 +1435,24 @@ git commit -m "feat: UserDefaults-backed SettingsStore with tests"
 ## Task 13: Refactor macOS app onto SonosKit
 
 **Files:**
+- Modify: `Package.swift` (restore the executable target)
 - Modify: `apps/macOS/ContentView.swift`
 - Modify: `apps/macOS/SonosAnnounceApp.swift` (only if it references moved types — it does not)
+
+- [ ] **Step 0: Restore the macOS executable target in `Package.swift`**
+
+Uncomment the `.executableTarget` block that Task 1 commented out, so the manifest again ends with:
+
+```swift
+        .executableTarget(
+            name: "SonosAnnounce",
+            dependencies: ["SonosKit"],
+            path: "apps/macOS",
+            exclude: ["Info.plist"]
+        ),
+    ]
+)
+```
 
 - [ ] **Step 1: Update `ContentView` to use the service and store**
 
