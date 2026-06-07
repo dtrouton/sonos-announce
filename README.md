@@ -25,6 +25,14 @@ swift build
 
 Or open the project in Xcode and build the `SonosAnnounce` target.
 
+## Testing
+
+```bash
+swift test
+```
+
+Runs the SonosKit unit tests (no speakers or simulator required).
+
 ## Running
 
 ```bash
@@ -40,17 +48,22 @@ The app will open a window where you can:
 
 ## Architecture
 
-| File | Purpose |
-|---|---|
-| `SonosAnnounceApp.swift` | App entry point |
-| `ContentView.swift` | Main UI — speaker selection, message input, volume, announce button |
-| `SonosDiscovery.swift` | Bonjour browser → IP resolution → device description fetch |
-| `SonosController.swift` | UPnP/SOAP calls for transport control, volume, and playback state |
-| `TTSGenerator.swift` | Text-to-speech via `say` (macOS) or `AVSpeechSynthesizer` (iOS) |
-| `AudioServer.swift` | Ephemeral HTTP server that serves the WAV file to speakers |
-| `SonosPlayer.swift` | Data models (`SonosPlayer`, `PlaybackState`, `SonosError`) |
-| `Utilities.swift` | XML helpers, local IP detection |
-| `FlowLayout.swift` | SwiftUI layout for wrapping quick-phrase buttons |
+The project is split into a shared library and a per-platform app shell:
+
+- `Sources/SonosKit/` — platform-agnostic core library (all the Sonos logic), unit-tested via `swift test`:
+  - `Models.swift` — `SonosPlayer`, `PlaybackState`, `SonosGroup`, `SonosError`, `AnnounceResult`
+  - `SonosDiscovery.swift` — Bonjour discovery → IP resolution → device description
+  - `SonosControlling.swift` — `SonosControlling` protocol + `SonosController` (UPnP/SOAP transport, volume, playback)
+  - `SonosTopology.swift` — parses `GetZoneGroupState` into zone groups + coordinators
+  - `CoordinatorResolver.swift` — maps selected players to their deduplicated group coordinators
+  - `TTSGenerator.swift` — text-to-speech via `AVSpeechSynthesizer`; `wavDuration` parsing
+  - `AudioServer.swift` — ephemeral HTTP server that serves the WAV to speakers (+ Range support)
+  - `AudioPreparer.swift` — `AudioPreparing` + `LocalAudioPreparer` (TTS → server → URL)
+  - `AnnouncementService.swift` — orchestrates the announce flow (resolve → snapshot → play → restore) with partial-success handling
+  - `SettingsStore.swift` — `UserDefaults`-backed settings (selected speakers, volume, quick phrases, prefix)
+  - `NetworkUtilities.swift` — local IP detection helpers
+  - `XMLUtilities.swift` — XML parsing helpers
+- `apps/macOS/` — the macOS SwiftUI app (`SonosAnnounceApp.swift`, `ContentView.swift`, `FlowLayout.swift`, `Info.plist`) that consumes `SonosKit`.
 
 ## Network Requirements
 
