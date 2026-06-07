@@ -14,13 +14,13 @@ public func getLocalIPAddress() -> String? {
         guard name.hasPrefix("en") else { continue }
 
         var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-        getnameinfo(
+        guard getnameinfo(
             addr.ifa_addr,
             socklen_t(addr.ifa_addr.pointee.sa_len),
             &hostname,
             socklen_t(hostname.count),
             nil, 0, NI_NUMERICHOST
-        )
+        ) == 0 else { continue }
         let ip = String(cString: hostname)
         if !ip.hasPrefix("169.254") {
             return ip
