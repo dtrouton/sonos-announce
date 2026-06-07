@@ -7,17 +7,11 @@ struct ContentView: View {
     @State private var message = ""
     @State private var customMessage = ""
 
-    private let quickPhrases = [
-        "Time to get ready for school!",
-        "Dinner time!",
-        "Come downstairs!",
-        "Have a shower!",
-    ]
+    private let settings = SettingsStore()
+    @State private var quickPhrases: [String] = SettingsStore().quickPhrases
     @State private var volume: Double = 50
     @State private var status = ""
     @State private var isAnnouncing = false
-
-    private let controller = SonosController()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -165,8 +159,12 @@ struct ContentView: View {
         }
         #endif
         .task {
+            selectedPlayers = settings.selectedPlayerIDs
+            volume = Double(settings.lastVolume)
             await discovery.discover()
         }
+        .onChange(of: selectedPlayers) { settings.selectedPlayerIDs = $0 }
+        .onChange(of: volume) { settings.lastVolume = Int($0) }
     }
 
     // MARK: - Announce Flow
@@ -178,49 +176,28 @@ struct ContentView: View {
         isAnnouncing = true
         defer { isAnnouncing = false }
 
-        do {
-            // 1. Generate TTS audio (once, shared across all speakers)
-            status = "Generating audio..."
-            let fullMessage = "Family announcement! \(message)"
-            let audioData = try await TTSGenerator.generate(text: fullMessage)
-            let audioDuration = Double(audioData.count - 44) / (44100.0 * 2.0)
+        settings.lastMessage = message
+        let fullMessage = settings.prefixEnabled ? "Family announcement! \(message)" : message
 
-            guard let localIP = getLocalIPAddress() else {
-                throw SonosError.noLocalIP
-            }
+        let service = LocalUPnPAnnouncementService(
+            controller: SonosController(),
+            resolver: LiveCoordinatorResolver(known: discovery.players),
+            audioPreparer: LocalAudioPreparer()
+        )
 
-            let server = AudioServer()
-            try await server.start(data: audioData)
-            defer { server.stop() }
+        status = "Announcing..."
+        let result = await service.announce(message: fullMessage, to: players, volume: Int(volume))
 
-            let audioURL = "http://\(localIP):\(server.port)/announce.wav"
-
-            let names = players.map(\.name).joined(separator: ", ")
-            status = "Announcing to \(names)..."
-
-            var snapshots: [(SonosPlayer, PlaybackState)] = []
-            for player in players {
-                let state = try await controller.snapshot(player: player)
-                snapshots.append((player, state))
-            }
-
-            for player in players {
-                try await controller.announce(player: player, audioURL: audioURL, volume: Int(volume))
-            }
-
-            try await controller.waitForCompletion(player: players[0], audioDuration: audioDuration)
-
-            status = "Restoring playback..."
-            for (player, state) in snapshots {
-                try await controller.restore(player: player, state: state)
-            }
-
+        if result.allSucceeded {
             status = "Done!"
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            status = ""
-
-        } catch {
-            status = "Error: \(error.localizedDescription)"
+        } else if result.succeeded.isEmpty {
+            status = "Failed: \(result.failed.first?.reason ?? "unknown error")"
+        } else {
+            let failedNames = result.failed.map(\.player.name).joined(separator: ", ")
+            status = "Announced to \(result.succeeded.count) of \(result.succeeded.count + result.failed.count) — \(failedNames) failed"
         }
+
+        try? await Task.sleep(nanoseconds: 3_000_000_000)
+        status = ""
     }
 }
