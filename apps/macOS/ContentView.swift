@@ -1,4 +1,5 @@
 import SwiftUI
+import SonosKit
 
 struct ContentView: View {
     @StateObject private var discovery = SonosDiscovery()
