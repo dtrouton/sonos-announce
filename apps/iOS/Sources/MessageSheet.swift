@@ -7,6 +7,7 @@ import SonosKit
 struct MessageSheet: View {
     @Binding var message: String
     @Binding var phrases: [String]
+    @Binding var prefixEnabled: Bool
     let onUse: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var editing = false
@@ -34,6 +35,11 @@ struct MessageSheet: View {
                 }
 
                 Spacer()
+
+                Toggle(isOn: $prefixEnabled) {
+                    Text("Start with \u{201C}Family announcement!\u{201D}")
+                        .font(.callout)
+                }
 
                 Button(action: { onUse(); dismiss() }) {
                     Text("Use this message")

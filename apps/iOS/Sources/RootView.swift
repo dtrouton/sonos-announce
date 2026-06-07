@@ -9,6 +9,7 @@ struct RootView: View {
     @State private var message = ""
     @State private var phrases: [String] = SettingsStore.defaultPhrases
     @State private var volume: Double = 50
+    @State private var prefixEnabled = true
     @State private var status = ""
     @State private var isAnnouncing = false
     @State private var showingSheet = false
@@ -93,7 +94,8 @@ struct RootView: View {
         .preferredColorScheme(.dark)
         .tint(Color(red: 0.04, green: 0.52, blue: 1.0))
         .sheet(isPresented: $showingSheet) {
-            MessageSheet(message: $message, phrases: $phrases, onUse: { settings.quickPhrases = phrases })
+            MessageSheet(message: $message, phrases: $phrases, prefixEnabled: $prefixEnabled,
+                         onUse: { settings.quickPhrases = phrases })
                 .presentationDetents([.medium, .large])
         }
         .task {
@@ -101,10 +103,12 @@ struct RootView: View {
             volume = Double(settings.lastVolume)
             phrases = settings.quickPhrases
             message = settings.lastMessage
+            prefixEnabled = settings.prefixEnabled
             await refresh()
         }
         .onChange(of: selected) { _ in settings.selectedPlayerIDs = selected }
         .onChange(of: volume) { _ in settings.lastVolume = Int(volume) }
+        .onChange(of: prefixEnabled) { _ in settings.prefixEnabled = prefixEnabled }
     }
 
     private func openSettings() {
