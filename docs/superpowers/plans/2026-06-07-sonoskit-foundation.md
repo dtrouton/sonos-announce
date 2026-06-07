@@ -1454,6 +1454,10 @@ Uncomment the `.executableTarget` block that Task 1 commented out, so the manife
 )
 ```
 
+- [ ] **Step 0b: Make `SonosDiscovery` public** (gap found during execution — the app module needs it)
+
+In `Sources/SonosKit/SonosDiscovery.swift`: change `class SonosDiscovery` to `public final class SonosDiscovery`, add `public init() {}`, and mark `@Published public var players`, `@Published public var isSearching`, and `public func discover()` as public. Leave private members private. Run `swift build --target SonosKit` to confirm it still compiles.
+
 - [ ] **Step 1: Update `ContentView` to use the service and store**
 
 Replace the body of `apps/macOS/ContentView.swift`'s announce logic and state to consume SonosKit. Specifically:
