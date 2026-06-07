@@ -1,10 +1,20 @@
 import Foundation
 
-class SonosController {
+/// Abstraction over a single player's UPnP transport so orchestration can be
+/// unit-tested against a mock without real speakers.
+public protocol SonosControlling: Sendable {
+    func snapshot(player: SonosPlayer) async throws -> PlaybackState
+    func announce(player: SonosPlayer, audioURL: String, volume: Int) async throws
+    func waitForCompletion(player: SonosPlayer, audioDuration: TimeInterval, timeout: TimeInterval) async throws
+    func restore(player: SonosPlayer, state: PlaybackState) async throws
+}
+
+public final class SonosController: SonosControlling {
+    public init() {}
 
     // MARK: - High-level Operations
 
-    func snapshot(player: SonosPlayer) async throws -> PlaybackState {
+    public func snapshot(player: SonosPlayer) async throws -> PlaybackState {
         async let transport = getTransportInfo(player: player)
         async let position = getPositionInfo(player: player)
         async let vol = getVolume(player: player)
@@ -22,13 +32,13 @@ class SonosController {
         )
     }
 
-    func announce(player: SonosPlayer, audioURL: String, volume: Int) async throws {
+    public func announce(player: SonosPlayer, audioURL: String, volume: Int) async throws {
         try await setVolume(player: player, volume: volume)
         try await setAVTransportURI(player: player, uri: audioURL, metadata: "")
         try await play(player: player)
     }
 
-    func waitForCompletion(player: SonosPlayer, audioDuration: TimeInterval, timeout: TimeInterval = 30) async throws {
+    public func waitForCompletion(player: SonosPlayer, audioDuration: TimeInterval, timeout: TimeInterval = 30) async throws {
         // Wait for at least the audio duration + buffer for Sonos to fetch/decode/play
         let minWait = max(audioDuration + 2.5, 4.0)
         try await Task.sleep(nanoseconds: UInt64(minWait * 1_000_000_000))
@@ -44,7 +54,7 @@ class SonosController {
         }
     }
 
-    func restore(player: SonosPlayer, state: PlaybackState) async throws {
+    public func restore(player: SonosPlayer, state: PlaybackState) async throws {
         try await setVolume(player: player, volume: state.volume)
 
         guard !state.currentURI.isEmpty else { return }

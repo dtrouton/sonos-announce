@@ -2,13 +2,15 @@ import Foundation
 import Network
 
 @MainActor
-class SonosDiscovery: ObservableObject {
-    @Published var players: [SonosPlayer] = []
-    @Published var isSearching = false
+public final class SonosDiscovery: ObservableObject {
+    @Published public var players: [SonosPlayer] = []
+    @Published public var isSearching = false
 
     private var browser: NWBrowser?
 
-    func discover() async {
+    public init() {}
+
+    public func discover() async {
         isSearching = true
 
         // Step 1: Browse for Sonos services via Bonjour
@@ -130,7 +132,7 @@ class SonosDiscovery: ObservableObject {
                 ?? extractXMLValue(from: xml, tag: "friendlyName")
                 ?? host
             let roomName = xmlUnescape(rawName)
-            let udn = extractXMLValue(from: xml, tag: "UDN") ?? host
+            let udn = normalizeUDN(extractXMLValue(from: xml, tag: "UDN") ?? host)
 
             return SonosPlayer(id: udn, name: roomName, host: host, port: port)
         } catch {
