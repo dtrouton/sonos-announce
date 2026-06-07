@@ -132,7 +132,7 @@ public final class SonosDiscovery: ObservableObject {
                 ?? extractXMLValue(from: xml, tag: "friendlyName")
                 ?? host
             let roomName = xmlUnescape(rawName)
-            let udn = extractXMLValue(from: xml, tag: "UDN") ?? host
+            let udn = normalizeUDN(extractXMLValue(from: xml, tag: "UDN") ?? host)
 
             return SonosPlayer(id: udn, name: roomName, host: host, port: port)
         } catch {

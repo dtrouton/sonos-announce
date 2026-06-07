@@ -1,5 +1,16 @@
 import Foundation
 
+/// Normalize a Sonos device identifier to the bare `RINCON_...` form.
+/// Device descriptions report the UDN as `uuid:RINCON_...`, while
+/// ZoneGroupTopology reports the bare `RINCON_...`. Strip the `uuid:` prefix
+/// (case-insensitively) so identifiers from the two sources compare equal.
+public func normalizeUDN(_ udn: String) -> String {
+    if udn.lowercased().hasPrefix("uuid:") {
+        return String(udn.dropFirst("uuid:".count))
+    }
+    return udn
+}
+
 /// Parse the XML returned by the ZoneGroupTopology `GetZoneGroupState` action
 /// into `SonosGroup` values. Uses XMLParser for robustness against attribute order.
 public func parseZoneGroupState(_ xml: String) -> [SonosGroup] {
